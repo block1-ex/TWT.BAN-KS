@@ -18,14 +18,12 @@
   html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:linear-gradient(180deg,#071025 0%,#061627 60%); color:#0d2b49;-webkit-font-smoothing:antialiased}
   .app{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px}
 
-  /* Main card */
   .card{width:100%;max-width:1100px;background:linear-gradient(180deg,#ffffff,#fbfdff);border-radius:14px;box-shadow:0 30px 80px rgba(2,6,23,0.45);overflow:hidden;display:flex}
   .left{flex:0 0 360px;padding:28px;background:linear-gradient(135deg,var(--accent-1),var(--accent-2));color:#fff;display:flex;flex-direction:column;gap:12px}
   .left h1{margin:0;font-size:1.25rem}
   .left p{margin:0;opacity:0.95;font-weight:600}
   .right{flex:1;padding:36px;color:#0d2b49}
 
-  /* PIN */
   .section-title{margin:0 0 8px;font-size:1.05rem;font-weight:800;color:#0d2b49}
   .section-sub{margin:0 0 18px;color:var(--muted);font-size:0.95rem}
   .pin-row{display:flex;gap:12px;justify-content:center;margin:18px 0 10px}
@@ -36,17 +34,14 @@
   .btn-ghost{background:transparent;border:1px solid rgba(13,43,73,0.06);color:#0d2b49}
   .muted{color:var(--muted);font-size:0.92rem;text-align:center;margin-top:12px}
 
-  /* Connector overlay using image */
   .connector{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;opacity:0;pointer-events:none;transition:opacity 560ms ease,transform 560ms ease;transform:translateY(8px) scale(.995)}
   .connector.show{opacity:1;pointer-events:auto;transform:none}
   .connector-content{width:100%;max-width:1100px;height:80vh;border-radius:14px;overflow:hidden;background:linear-gradient(180deg,#02102199,#04172b99);box-shadow:0 40px 120px rgba(2,6,23,0.6);display:flex;align-items:stretch}
   .map-image-wrap{flex:1 1 60%;position:relative;min-height:240px;overflow:hidden;background:#000}
   .map-image{width:100%;height:100%;object-fit:cover;display:block;transform-origin:center center;transition:transform 1400ms cubic-bezier(.16,.84,.28,1),filter 900ms ease}
-  /* gentle zoom/kenburns effect during connect */
   .map-image.zoomin{transform:scale(1.06)}
   .map-fade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,12,20,0.25),rgba(6,12,20,0.55));pointer-events:none}
 
-  /* Pin markers (animated) */
   .pin-layer{position:absolute;inset:0;pointer-events:none}
   .pin-dot{position:absolute;width:56px;height:56px;border-radius:999px;background:linear-gradient(135deg,#ff6161,#ff8a61);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;box-shadow:0 14px 36px rgba(255,122,97,0.18);transform:translate(-50%,-50%); animation:pinFloat 1800ms infinite}
   @keyframes pinFloat{0%{transform:translate(-50%,-50%) translateY(0) scale(1)}50%{transform:translate(-50%,-50%) translateY(-8px) scale(1.06)}100%{transform:translate(-50%,-50%) translateY(0) scale(1)}}
@@ -60,14 +55,12 @@
   .connector-actions{display:flex;gap:10px;margin-top:12px}
   .cancel-link{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer}
 
-  /* Receipt / modernized preview */
   .outgoing{width:100%;padding:28px;display:none;opacity:0;transform:translateY(10px);transition:opacity 900ms cubic-bezier(.16,.84,.28,1),transform 900ms cubic-bezier(.16,.84,.28,1)}
   .outgoing.show{display:block;opacity:1;transform:none}
-  .receipt{display:grid;grid-template-columns:260px 1fr;gap:18px;align-items:start}
-  .id-card{background:linear-gradient(180deg,#ffffff,#fbfdff);padding:14px;border-radius:12px;border:1px solid #eef6ff;display:flex;flex-direction:column;gap:12px;min-height:260px;align-items:center}
-  .id-placeholder{width:100%;height:240px;background:linear-gradient(135deg,#f1f7ff,#eaf1ff);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:700;text-align:center;padding:12px}
+  .receipt{display:grid;grid-template-columns:320px 1fr;gap:18px;align-items:start}
+  .id-card{background:linear-gradient(180deg,#ffffff,#fbfdff);padding:14px;border-radius:12px;border:1px solid #eef6ff;display:flex;flex-direction:column;gap:12px;min-height:320px;align-items:center}
+  .id-placeholder{width:100%;height:280px;background:linear-gradient(135deg,#f1f7ff,#eaf1ff);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:700;text-align:center;padding:12px}
   .id-card img{width:100%;height:auto;border-radius:8px;object-fit:cover}
-  .id-uploader{display:flex;gap:8px;justify-content:center;width:100%}
   .tx-info{background:linear-gradient(180deg,#fff,#fbfdff);padding:18px;border-radius:12px;border:1px solid #eef6ff;display:flex;flex-direction:column;gap:12px}
   .tx-row{display:flex;justify-content:space-between;gap:12px;align-items:center}
   .label{font-weight:700;color:var(--muted);font-size:0.88rem;margin-bottom:6px}
@@ -81,10 +74,8 @@
   @keyframes shimmer{0%{background-position:-200px 0}100%{background-position:200px 0}}
   .amount{font-size:2rem;color:#0d2b49;font-weight:900;letter-spacing:-0.6px}
 
-  /* small screens */
   @media (max-width:920px){ .card{flex-direction:column}.left{padding:18px}.right{padding:18px}.connector-panel{width:100%;padding:18px}.connector-content{flex-direction:column;height:72vh}.receipt{grid-template-columns:1fr} }
 
-  /* reduced motion */
   @media (prefers-reduced-motion: reduce){ .map-image,.map-image.zoomin,.connector,.progress-bar,.pin-dot{transition:none!important;animation:none!important} }
 </style>
 </head>
@@ -93,7 +84,7 @@
     <div class="card" role="region" aria-label="Secure bridge authorization">
       <div class="left" aria-hidden="false">
         <h1>Bridge Transaction</h1>
-        <p>Secure ETF settlement — professional presentation</p>
+        <p>Secure 🔑</p>
         <div style="margin-top:6px">
           <p style="margin:0;font-weight:800">Arion Bank • Iceland</p>
           <p style="margin:0;color:rgba(255,255,255,0.9);font-size:0.92rem">Smooth connect • Modern receipt</p>
@@ -120,27 +111,17 @@
       </div>
     </div>
 
-    <!-- Connector overlay: uses the provided image (save as arion-map.jpg) -->
     <div class="connector" id="connector" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Connecting to ARION Bank">
       <div class="connector-content" role="document">
         <div class="map-image-wrap" aria-hidden="true">
-          <!-- IMPORTANT: save your Image 2 as "arion-map.jpg" in the same folder as this HTML file -->
+          <!-- Map image (optional) used during connect. Save as IMG_0126.jpeg -->
           <img id="mapImg" class="map-image" src="IMG_0126.jpeg" alt="Arion Bank map" crossorigin="anonymous" />
           <div class="map-fade" aria-hidden="true"></div>
 
-          <!-- pin layer: the positions are approximate percentages on the image; adjust CSS left/top values if needed -->
           <div class="pin-layer" aria-hidden="true">
-            <!-- example pins (positions are % of the image) -->
-            <div style="left:55%;top:70%" class="pin-dot" title="Arion bank - Reykjavik">
-              A
-            </div>
-            <div style="left:40%;top:50%" class="pin-dot" title="Arion bank - West">
-              A
-            </div>
-            <div style="left:58%;top:28%" class="pin-dot" title="Arion bank - North">
-              A
-            </div>
-            <!-- optional label over the main pin -->
+            <div style="left:55%;top:70%" class="pin-dot" title="Arion bank - Reykjavik">A</div>
+            <div style="left:40%;top:50%" class="pin-dot" title="Arion bank - West">A</div>
+            <div style="left:58%;top:28%" class="pin-dot" title="Arion bank - North">A</div>
             <div style="left:55%;top:70%" class="pin-label">ARION Bank</div>
           </div>
         </div>
@@ -157,26 +138,23 @@
             <button class="cancel-link" id="cancelConnectBtn">Cancel</button>
           </div>
 
-          <div style="margin-top:8px;color:rgba(255,255,255,0.85);font-size:0.92rem">The map image will gently zoom and focus while we prepare the professional receipt.</div>
+          <div style="margin-top:8px;color:rgba(255,255,255,0.85);font-size:0.92rem">Loading....</div>
         </div>
       </div>
     </div>
 
-    <!-- Modernized transaction receipt -->
     <main class="outgoing" id="outgoing" aria-hidden="true">
       <div class="receipt" role="region" aria-label="Transaction receipt">
         <div class="id-card" id="idCardBlock">
-          <div id="idPreview" class="id-placeholder">Upload or drop an ID / Receipt image here</div>
-          <div class="id-uploader">
-            <input type="file" id="idInput" accept="image/*" style="display:none" />
-            <button class="btn btn-ghost" id="uploadBtn">Upload Image</button>
-            <button class="btn btn-ghost" id="removeImgBtn" style="display:none">Remove</button>
+          <!-- Display Image 3 (license confirmation) directly -->
+          <div id="idPreview" class="id-placeholder" aria-hidden="false">
+            <img id="licenseImg" src="IMG_0124.jpeg" alt="License confirmation" style="width:100%;height:auto;border-radius:8px;display:block" />
           </div>
-          <div style="font-weight:700;color:var(--muted);font-size:0.9rem;text-align:center">ID / Receipt Preview</div>
+
+          <div style="font-weight:700;color:var(--muted);font-size:0.9rem;text-align:center">License Confirmation</div>
         </div>
 
         <div class="tx-info" id="txInfoBlock" aria-live="polite">
-          <!-- skeleton initial state -->
           <div id="skeletonTop" style="display:block">
             <div class="skeleton" style="width:45%"></div>
             <div style="height:12px"></div>
@@ -184,7 +162,6 @@
             <div style="height:14px"></div>
           </div>
 
-          <!-- real content (revealed) -->
           <div id="txContent" style="display:none;opacity:0;transform:translateY(8px);transition:opacity 700ms ease,transform 700ms ease;">
             <div class="tx-row">
               <div>
@@ -206,9 +183,15 @@
 
               <div class="box">
                 <div class="label">Receiver</div>
-                <div class="value">Finnur Sturluson</div>
+                <div class="value" id="receiverValue">Finnur Sturluson</div>
                 <div style="margin-top:8px;color:var(--muted);font-size:0.95rem">Bank link: Arion Bank — www.arionbank.is</div>
               </div>
+            </div>
+
+            <div class="box" style="margin-top:12px">
+              <div class="label">Processing Fee</div>
+              <div class="value" id="feeValue">$100</div>
+              <div style="margin-top:8px;color:var(--muted);font-size:0.95rem">Settlement method: ETF Integration</div>
             </div>
 
             <div class="summary" style="margin-top:10px">
@@ -236,8 +219,15 @@
 
 <script>
 (function(){
-  // Demo PIN (for production, do server-side)
+  // config
   const CORRECT_PIN = '8440';
+  const MAP_IMAGE_SRC = 'IMG_0126.jpeg';  // optional overlay image during connection
+  const AMOUNT_USD = 200000;
+  const ISK_APPROX = 25080000;
+  const FEE_USD = 100;
+  const BENEFICIARY = 'Finnur Sturluson';
+
+  // elements
   const inputs = [document.getElementById('d0'), document.getElementById('d1'), document.getElementById('d2'), document.getElementById('d3')];
   const verifyBtn = document.getElementById('verifyBtn');
   const cancelBtn = document.getElementById('cancelBtn');
@@ -250,25 +240,20 @@
   const skeletonTop = document.getElementById('skeletonTop');
   const amountValue = document.getElementById('amountValue');
   const iskApprox = document.getElementById('iskApprox');
-  const idInput = document.getElementById('idInput');
-  const uploadBtn = document.getElementById('uploadBtn');
-  const idPreview = document.getElementById('idPreview');
-  const removeImgBtn = document.getElementById('removeImgBtn');
+  const feeValue = document.getElementById('feeValue');
+  const receiverValue = document.getElementById('receiverValue');
   const authorizeBtn = document.getElementById('authorizeBtn');
   const backBtn = document.getElementById('backBtn');
   const cancelConnectBtn = document.getElementById('cancelConnectBtn');
-  const amount = 200000;
-  const isk = 25080000;
 
-  // helpers
   const delay = ms => new Promise(r=>setTimeout(r,ms));
   function getPin(){ return inputs.map(i=>i.value||'').join(''); }
   function clearPin(){ inputs.forEach(i=>i.value=''); try{inputs[0].focus()}catch(e){} }
 
-  // input UX
+  // inputs UX
   inputs.forEach((el, idx)=>{
     el.addEventListener('input', (e)=>{
-      const v = (e.target.value||'').replace(/\\D/g,'').slice(0,1);
+      const v = (e.target.value||'').replace(/\D/g,'').slice(0,1);
       e.target.value = v;
       if (v && idx < inputs.length-1) inputs[idx+1].focus();
     });
@@ -279,100 +264,14 @@
     el.addEventListener('paste', (e)=>{
       e.preventDefault();
       const pasted = (e.clipboardData||window.clipboardData).getData('text')||'';
-      const digits = pasted.replace(/\\D/g,'').slice(0,4).split('');
+      const digits = pasted.replace(/\D/g,'').slice(0,4).split('');
       for(let k=0;k<digits.length;k++) if (inputs[k]) inputs[k].value = digits[k];
       if (getPin().length===4) attemptVerify();
     });
   });
 
-  // show/hide connector
   function showConnector(){ connector.classList.add('show'); connector.setAttribute('aria-hidden','false'); }
   function hideConnector(){ connector.classList.remove('show'); connector.setAttribute('aria-hidden','true'); }
-
-  async function startConnectionFlow(){
-    showConnector();
-    connectorStatus.textContent = 'Preparing image and secure link';
-    progressBar.style.width = '8%';
-    // subtle initial wait for polish
-    await delay(480);
-    connectorStatus.textContent = 'Loading map image…';
-    progressBar.style.width = '22%';
-
-    // ensure the image loads; if not present, we degrade gracefully
-    if (!mapImg.complete || mapImg.naturalWidth === 0) {
-      // try to load; if missing, warn and continue
-      try {
-        await new Promise((resolve, reject) => {
-          mapImg.onload = resolve;
-          mapImg.onerror = reject;
-          // small timeout for remote cases
-          setTimeout(resolve, 1200);
-        });
-      } catch (e) {
-        connectorStatus.textContent = 'Image load failed — proceeding to receipt';
-      }
-    }
-    // animate zoom-in effect
-    mapImg.classList.add('zoomin');
-    progressBar.style.width = '48%';
-    connectorStatus.textContent = 'Establishing secure ETF settlement channel…';
-    await delay(900);
-
-    // advance progress and pin focus (visual)
-    progressBar.style.width = '72%';
-    connectorStatus.textContent = 'Verifying beneficiary & preparing receipt…';
-    await delay(900);
-
-    // finalizing
-    progressBar.style.width = '96%';
-    connectorStatus.textContent = 'Finalizing';
-    await delay(500);
-
-    // hide overlay and reveal receipt
-    hideConnector();
-    // small fade-out timing
-    await delay(320);
-
-    revealReceipt();
-    try { sessionStorage.setItem('bridge.authorized','1'); } catch(e){}
-  }
-
-  // reveal the modern receipt with animation and count-up
-  async function revealReceipt(){
-    // show outgoing area
-    outgoing.classList.add('show');
-    outgoing.setAttribute('aria-hidden','false');
-
-    // reveal tx content with slight delay for polished feel
-    await delay(140);
-    skeletonTop.style.display = 'none';
-    txContent.style.display = 'block';
-    // trigger enter animation
-    requestAnimationFrame(()=> {
-      txContent.style.opacity = '1';
-      txContent.style.transform = 'none';
-    });
-
-    // animate progress bar like count-up for amount
-    animateCount(amountValue, 0, amount, 1100);
-    // update ISK approx after small delay
-    await delay(180);
-    iskApprox.textContent = new Intl.NumberFormat().format(isk) + ' kr';
-  }
-
-  // animate numbers (smooth easing)
-  function animateCount(el, start, end, duration){
-    const startTime = performance.now();
-    function tick(now){
-      const t = Math.min(1, (now - startTime)/duration);
-      // easeOutCubic
-      const eased = 1 - Math.pow(1-t, 3);
-      const current = Math.round(start + (end - start) * eased);
-      el.textContent = '$' + new Intl.NumberFormat().format(current);
-      if (t < 1) requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
-  }
 
   async function attemptVerify(){
     const pin = getPin();
@@ -401,46 +300,92 @@
   cancelBtn.addEventListener('click', clearPin);
   cancelConnectBtn.addEventListener('click', ()=>{ hideConnector(); try{sessionStorage.removeItem('bridge.authorized')}catch(e){}; clearPin(); });
 
-  // file upload & drag-drop
-  uploadBtn.addEventListener('click', ()=> idInput.click());
-  idInput.addEventListener('change', (e)=>{
-    const f = e.target.files && e.target.files[0];
-    if (!f) return;
-    const reader = new FileReader();
-    reader.onload = function(ev){
-      const src = ev.target.result;
-      idPreview.innerHTML = '';
-      const img = document.createElement('img');
-      img.alt = 'Uploaded ID/Receipt';
-      img.src = src;
-      img.onload = ()=>{};
-      idPreview.appendChild(img);
-      removeImgBtn.style.display = 'inline-block';
-    };
-    reader.readAsDataURL(f);
-  });
+  async function startConnectionFlow(){
+    mapImg.src = MAP_IMAGE_SRC;
+    showConnector();
+    connectorStatus.textContent = 'Preparing image and secure link';
+    progressBar.style.width = '8%';
+    await delay(480);
+    connectorStatus.textContent = 'Loading image…';
+    progressBar.style.width = '22%';
 
-  removeImgBtn.addEventListener('click', ()=>{ idPreview.innerHTML = 'Upload or drop an ID / Receipt image here'; idInput.value=''; removeImgBtn.style.display='none'; });
+    if (!mapImg.complete || mapImg.naturalWidth === 0) {
+      await new Promise((resolve)=> {
+        const onload = ()=>{ mapImg.removeEventListener('error', onerror); resolve(); };
+        const onerror = ()=>{ mapImg.removeEventListener('load', onload); resolve(); };
+        mapImg.addEventListener('load', onload);
+        mapImg.addEventListener('error', onerror);
+        setTimeout(resolve, 1400);
+      });
+    }
 
-  idPreview.addEventListener('dragover', (e)=>{ e.preventDefault(); idPreview.style.opacity = 0.9; });
-  idPreview.addEventListener('dragleave', ()=>{ idPreview.style.opacity = 1; });
-  idPreview.addEventListener('drop', (e)=>{ e.preventDefault(); idPreview.style.opacity = 1; const dt = e.dataTransfer; if (dt && dt.files && dt.files[0]){ idInput.files = dt.files; const ev = new Event('change'); idInput.dispatchEvent(ev);} });
+    mapImg.classList.add('zoomin');
+    progressBar.style.width = '48%';
+    connectorStatus.textContent = 'Establishing secure ETF settlement channel…';
+    await delay(900);
 
-  // authorize/back actions
+    progressBar.style.width = '72%';
+    connectorStatus.textContent = 'Verifying beneficiary & preparing receipt…';
+    await delay(900);
+
+    progressBar.style.width = '96%';
+    connectorStatus.textContent = 'Finalizing';
+    await delay(500);
+
+    hideConnector();
+    await delay(320);
+    revealReceipt();
+    try { sessionStorage.setItem('bridge.authorized','1'); } catch(e){}
+  }
+
+  async function revealReceipt(){
+    receiverValue.textContent = BENEFICIARY;
+    feeValue.textContent = '$' + new Intl.NumberFormat().format(FEE_USD);
+
+    outgoing.classList.add('show');
+    outgoing.setAttribute('aria-hidden','false');
+
+    await delay(140);
+    skeletonTop.style.display = 'none';
+    txContent.style.display = 'block';
+    requestAnimationFrame(()=> {
+      txContent.style.opacity = '1';
+      txContent.style.transform = 'none';
+    });
+
+    animateCount(amountValue, 0, AMOUNT_USD, 1100);
+    await delay(180);
+    iskApprox.textContent = new Intl.NumberFormat().format(ISK_APPROX) + ' kr';
+  }
+
+  function animateCount(el, start, end, duration){
+    const startTime = performance.now();
+    function tick(now){
+      const t = Math.min(1, (now - startTime)/duration);
+      const eased = 1 - Math.pow(1-t, 3);
+      const current = Math.round(start + (end - start) * eased);
+      el.textContent = '$' + new Intl.NumberFormat().format(current);
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // Pre-populate license image (Image 3) will be displayed by the <img> tag inside idPreview.
+  // No upload UI is shown; user shouldn't upload.
+
   authorizeBtn.addEventListener('click', ()=>{
     authorizeBtn.disabled = true;
     authorizeBtn.textContent = 'Processing…';
     setTimeout(()=>{ alert('ETF settlement initiated — redirecting to your agent.'); window.location.href='https://t.me/AcesstBridge_go1'; }, 900);
   });
+
   backBtn.addEventListener('click', ()=>{ try{sessionStorage.removeItem('bridge.authorized')}catch(e){}; outgoing.classList.remove('show'); outgoing.setAttribute('aria-hidden','true'); document.querySelector('.card').style.display='flex'; });
 
-  // if authorized on reload, replay flow for continuity
   try {
     if (sessionStorage.getItem('bridge.authorized') === '1') {
       requestAnimationFrame(()=> setTimeout(()=> startConnectionFlow().catch(()=>revealReceipt()), 180));
     }
   } catch(e){}
-
 })();
 </script>
 </body>
